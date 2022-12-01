@@ -6,9 +6,10 @@
 #include <fstream>
 
 #include "Player.h"
-using namespace std;
 
-void printHelloWorld();
+void fillLegend(unordered_map<string, string>);
+
+using namespace std;
 
 int main()
 {
@@ -20,6 +21,7 @@ int main()
     map<string, Player> homePlayers;
 
     unordered_map<string, string> legend;
+    fillLegend(legend);
 
     //create a vector for leaders in each category and values for each leader
     vector<Player> battingAverageLeaders;
@@ -61,9 +63,64 @@ int main()
         //get the player's stats
         string code;
         file >> code;
-        
-        
 
+        //need to do a switch statement that changes the player stat depending on the legend value after indexing a code
+    }
+}
+
+//create a function that fills the hashmap with the play codes and descriptions
+void fillLegend(unordered_map<string, string> legend)
+{
+    //input from keyfile.txt to fill the hashmap with the play codes and descriptions
+    ifstream file("keyfile.txt");
+    string line;
+
+    int count = 0;
+    string description = "";
+    while(getline(file,line))
+    {
+        if(line[0] == '#')
+        {
+            count++;
+
+            switch (count)
+            {
+            case 1:
+                description = "Out";
+                break;
+            case 2:
+                description = "Strikeout";
+                break;
+            case 3:
+                description = "Hit";
+                break;
+            case 4:
+                description = "Walk";
+                break;
+            case 5:
+                description = "Sacrifice";
+                break;
+            case 6:
+                description = "Hits By Pitch";
+                break;
+            case 7:
+                description = "Error";
+                break;
+            default:
+                break;
+            }
+            continue;
+        }
+        else if (line.size() == 0)
+        {
+            continue;
+        }
+        else
+        {
+            string code;
+            file >> code;
+            legend.insert(pair<string, string>(code, description));
+        }
     }
 }
 
