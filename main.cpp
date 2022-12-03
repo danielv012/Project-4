@@ -7,15 +7,15 @@
 
 #include "Player.h"
 
-void fillLegend(unordered_map<string, string>);
+void fillLegend(std::unordered_map<std::string, std::string>&);
 
 using namespace std;
 
 int main()
 {
     string fileName;
-    cout << "Enter the name of the file: ";
-    cin >> fileName;
+    // cout << "Enter the name of the file: ";
+    // cin >> fileName;
 
     map<string, Player> awayPlayers;
     map<string, Player> homePlayers;
@@ -34,6 +34,16 @@ int main()
 
     ifstream file(fileName);
     string line;
+
+    cout << legend["1-3"] << endl;
+    cout << "Expected: Out" << endl;
+    cout << legend["3u"] << endl;
+    cout << "Expected: Out" << endl;
+    cout << legend["K"] << endl;
+    cout << "Expected: Strikeout" << endl;
+    cout << legend["BB"] << endl;
+    cout << "Expected: Walk" << endl;
+
 
     while(getline(file,line))
     {
@@ -64,12 +74,14 @@ int main()
         string code;
         file >> code;
 
-        //need to do a switch statement that changes the player stat depending on the legend value after indexing a code
+        
+
+
     }
 }
 
 //create a function that fills the hashmap with the play codes and descriptions
-void fillLegend(unordered_map<string, string> legend)
+void fillLegend(unordered_map<string, string> &legend)
 {
     //input from keyfile.txt to fill the hashmap with the play codes and descriptions
     ifstream file("keyfile.txt");
@@ -117,9 +129,7 @@ void fillLegend(unordered_map<string, string> legend)
         }
         else
         {
-            string code;
-            file >> code;
-            legend.insert(pair<string, string>(code, description));
+            legend.insert(pair<string, string>(line, description));
         }
     }
 }
