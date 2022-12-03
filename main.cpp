@@ -8,10 +8,19 @@
 
 #include "Player.h"
 
-void fillLegend(std::unordered_map<std::string, std::string>&);
-void printPlayers(std::map<std::string, Player>&);
 
 using namespace std;
+
+void fillLegend(std::unordered_map<std::string, std::string>&);
+void printPlayers(std::map<std::string, Player>&);
+void printLeaders(std::vector<Player> &);
+bool compareBattingAverage(Player &player1, Player &player2);
+bool compareOnBasePercentage(Player &player1, Player &player2);
+bool compareName(Player &player1, Player &player2);
+bool compareInput(Player &player1, Player &player2);
+bool compareHits(Player &player1, Player &player2);
+
+
 
 int main()
 {
@@ -34,12 +43,14 @@ int main()
     cout << legend["F8"] << endl;
     cout << legend["1-3"] << endl;
 
-
+    int count = 0;
 
     while(getline(file,line))
     {
         //create a player object
         Player player;
+        
+        player.setInput(count);
 
         char c;
         stringstream(line) >> c;
@@ -121,9 +132,16 @@ int main()
         bool found = false;
         for(int i = 0; i < leaders.size(); i++)
         {
-            if(leaders[i] == player)
+            if(leaders[i].getName() == player.getName())
             {
                 found = true;
+                leaders[i].setHits(leaders[i].getHits() + player.getHits());
+                    leaders[i].setWalks(leaders[i].getWalks() + player.getWalks());
+                    leaders[i].setStrikeouts(leaders[i].getStrikeouts() + player.getStrikeouts());
+                    leaders[i].setHits_By_Pitch(leaders[i].getHits_By_Pitch() + player.getHits_By_Pitch());
+                    leaders[i].setSacrifices(leaders[i].getSacrifices() + player.getSacrifices());
+                    leaders[i].setAt_Bats(leaders[i].getAt_Bats() + player.getAt_Bats());
+                    leaders[i].setPlate_Appearances(leaders[i].getPlate_Appearances() + player.getPlate_Appearances());
                 break;
             }
         }
@@ -176,8 +194,7 @@ int main()
     printPlayers(awayPlayers);
     printPlayers(homePlayers);
 
-
-
+    printLeaders(leaders);
 }
 
 //create a function that fills the hashmap with the play codes and descriptions
@@ -264,5 +281,353 @@ void printPlayers(map<string, Player> &players)
     cout << endl;
 }
 
-//create a function that is responsible for printing the leaders in each category
+//create a function that takes the leaders vector and prints the leaders
+void printLeaders(vector<Player> &leaders)
+{
+    cout << "LEAGUE LEADERS" << endl;
+    
+    //-----------BATTING AVERAGE------------//
+    sort(leaders.begin(), leaders.end(), compareBattingAverage);
+    
+    vector<Player> temp;
 
+    int leaderCount = 0, i = 0;
+    cout << "BATTING AVERAGE" << endl;
+    cout << fixed << setprecision(3) << leaders[0].getBatting_Average() << "\t";
+    for(i = 0; i < leaders.size(); i++) // 1st PLACE TIES /////////////
+    {
+        if(leaders[i].getBatting_Average() == leaders[0].getBatting_Average())
+        {
+            temp.push_back(leaders[i]);
+            leaderCount++;
+        }
+        else break;
+    }
+    sort(temp.begin(), temp.end(), compareInput);
+    for(int j = 0; j < temp.size(); j++) // AWAY /////////////
+    {
+        if (temp[j].isHome())
+        {
+            continue;
+        }
+        else
+        {
+            if (j != 0)
+            {
+                cout << ", ";
+            }
+
+            cout << temp[j].getName();
+        }
+    }
+    for(int j = 0; j < temp.size(); j++) // HOME /////////////
+    {
+        if (temp[j].isHome())
+        {
+            if (j != 0)
+            {
+                cout << ", ";
+            }
+
+            cout << temp[j].getName();
+        }
+        else
+        {
+            continue;
+        }
+    }
+    cout << endl;
+    temp.clear();
+
+    if(leaderCount >= 3 || i >= leaders.size()) {/*continue*/}
+    else
+    {
+        cout << fixed << setprecision(3) << leaders[leaderCount].getBatting_Average() << "\t";
+        int initialLeaderCount = leaderCount;
+        for(i = leaderCount; i < leaders.size(); i++) // 2nd PLACE TIES ///////////
+        {
+            if(leaders[i].getBatting_Average() == leaders[initialLeaderCount].getBatting_Average())
+            {
+                temp.push_back(leaders[i]);
+                leaderCount++;
+            }
+            else break;
+        }
+        sort(temp.begin(), temp.end(), compareInput);
+        for (int j = 0; j < temp.size(); j++) // AWAY /////////////
+        {
+            if (temp[j].isHome())
+            {
+                continue;
+            }
+            else
+            {
+                if (j != 0)
+                {
+                    cout << ", ";
+                }
+
+                cout << temp[j].getName();
+            }
+        }
+        for (int j = 0; j < temp.size(); j++) // HOME /////////////
+        {
+            if (temp[j].isHome())
+            {
+                if (j != 0)
+                {
+                    cout << ", ";
+                }
+
+                cout << temp[j].getName();
+            }
+            else
+            {
+                continue;
+            }
+        }
+        cout << endl;
+        temp.clear();
+
+        if(leaderCount >= 3 || i >= leaders.size()) {/*continue*/}
+        else
+        {
+            cout << fixed << setprecision(3) << leaders[leaderCount].getBatting_Average() << "\t";
+            int initialLeaderCount = leaderCount;
+            for(i = leaderCount; i < leaders.size(); i++) // 3rd PLACE TIES ////////
+            {
+                if(leaders[i].getBatting_Average() == leaders[initialLeaderCount].getBatting_Average())
+                {
+                    temp.push_back(leaders[i]);
+                    leaderCount++;
+                }
+                else break;
+            }
+            sort(temp.begin(), temp.end(), compareInput);
+            for (int j = 0; j < temp.size(); j++) // AWAY /////////////
+            {
+                if (temp[j].isHome())
+                {
+                    continue;
+                }
+                else
+                {
+                    if (j != 0)
+                    {
+                        cout << ", ";
+                    }
+
+                    cout << temp[j].getName();
+                }
+            }
+            for (int j = 0; j < temp.size(); j++) // HOME /////////////
+            {
+                if (temp[j].isHome())
+                {
+                    if (j != 0)
+                    {
+                        cout << ", ";
+                    }
+
+                    cout << temp[j].getName();
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            cout << endl;
+            temp.clear();
+        }
+
+    }
+    cout << endl;
+    //--------------------------------------//
+
+    //-----------ON BASE PERCENTAGE------------//
+    sort(leaders.begin(), leaders.end(), compareOnBasePercentage);
+
+    leaderCount = 0, i = 0;
+    cout << "ON BASE PERCENTAGE" << endl;
+    cout << fixed << setprecision(3) << leaders[0].getOn_Base_Percentage() << "\t";
+    for(i = 0; i < leaders.size(); i++) // 1st PLACE TIES /////////////
+    {
+        if(leaders[i].getOn_Base_Percentage() == leaders[0].getOn_Base_Percentage())
+        {
+            temp.push_back(leaders[i]);
+            leaderCount++;
+        }
+        else break;
+    }
+    sort(temp.begin(), temp.end(), compareName);
+    for(int j = 0; j < temp.size(); j++) // AWAY /////////////
+    {
+        if (temp[j].isHome())
+        {
+            continue;
+        }
+        else
+        {
+            if (j != 0)
+            {
+                cout << ", ";
+            }
+
+            cout << temp[j].getName();
+        }
+    }
+    for(int j = 0; j < temp.size(); j++) // HOME /////////////
+    {
+        if (temp[j].isHome())
+        {
+            if (j != 0)
+            {
+                cout << ", ";
+            }
+
+            cout << temp[j].getName();
+        }
+        else
+        {
+            continue;
+        }
+    }
+    cout << endl;
+    temp.clear();
+
+    if(leaderCount >= 3 || i >= leaders.size()) {/*continue*/}
+    else
+    {
+        cout << fixed << setprecision(3) << leaders[leaderCount].getOn_Base_Percentage() << "\t";
+        int initialLeaderCount = leaderCount;
+        for(i = leaderCount; i < leaders.size(); i++) // 2nd PLACE TIES ///////////
+        {
+            if(leaders[i].getOn_Base_Percentage() == leaders[initialLeaderCount].getOn_Base_Percentage())
+            {
+                temp.push_back(leaders[i]);
+                leaderCount++;
+            }
+            else break;
+        }
+        sort(temp.begin(), temp.end(), compareName);
+        for (int j = 0; j < temp.size(); j++) // AWAY /////////////
+        {
+            if (temp[j].isHome())
+            {
+                continue;
+            }
+            else
+            {
+                if (j != 0)
+                {
+                    cout << ", ";
+                }
+
+                cout << temp[j].getName();
+            }
+        }
+        for (int j = 0; j < temp.size(); j++) // HOME /////////////
+        {
+            if (temp[j].isHome())
+            {
+                if (j != 0)
+                {
+                    cout << ", ";
+                }
+
+                cout << temp[j].getName();
+            }
+            else
+            {
+                continue;
+            }
+        }
+        cout << endl;
+        temp.clear();
+
+        if(leaderCount >= 3 || i >= leaders.size()) {/*continue*/}
+        else
+        {
+            cout << fixed << setprecision(3) << leaders[leaderCount].getOn_Base_Percentage() << "\t";
+            int initialLeaderCount = leaderCount;
+            for(i = leaderCount; i < leaders.size(); i++) // 3rd PLACE TIES ////////
+            {
+                if(leaders[i].getOn_Base_Percentage() == leaders[initialLeaderCount].getOn_Base_Percentage())
+                {
+                    temp.push_back(leaders[i]);
+                    leaderCount++;
+                }
+                else break;
+            }
+            sort(temp.begin(), temp.end(), compareName);
+            for (int j = 0; j < temp.size(); j++) // AWAY /////////////
+            {
+                if (temp[j].isHome())
+                {
+                    continue;
+                }
+                else
+                {
+                    if (j != 0)
+                    {
+                        cout << ", ";
+                    }
+
+                    cout << temp[j].getName();
+                }
+            }
+            for (int j = 0; j < temp.size(); j++) // HOME /////////////
+            {
+                if (temp[j].isHome())
+                {
+                    if (j != 0)
+                    {
+                        cout << ", ";
+                    }
+
+                    cout << temp[j].getName();
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            cout << endl;
+            temp.clear();
+        }
+
+    }
+    cout << endl;
+    //--------------------------------------//
+
+}
+
+//create a function that compares two players by name
+bool compareName(Player &player1, Player &player2)
+{
+    return player1.getName() < player2.getName();
+}
+
+//create a function that compares two players by batting average
+bool compareBattingAverage(Player &player1, Player &player2)
+{
+    return player1.getBatting_Average() > player2.getBatting_Average();
+}
+
+//create a function that compares two players by on base percentage
+bool compareOnBasePercentage(Player &player1, Player &player2)
+{
+    return player1.getOn_Base_Percentage() > player2.getOn_Base_Percentage();
+}
+
+//create a function that compares two players by input
+bool compareInput(Player &player1, Player &player2)
+{
+    return player1.getInput() < player2.getInput();
+}
+
+//create a function that compares two players by hits
+bool compareHits(Player &player1, Player &player2)
+{
+    return player1.getHits() > player2.getHits();
+}
