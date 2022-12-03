@@ -5,6 +5,8 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
+#include <algorithm>
 
 #include "Player.h"
 
@@ -14,13 +16,24 @@ using namespace std;
 void fillLegend(std::unordered_map<std::string, std::string>&);
 void printPlayers(std::map<std::string, Player>&);
 void printLeaders(std::vector<Player> &);
+
 bool compareBattingAverage(Player &player1, Player &player2);
 bool compareOnBasePercentage(Player &player1, Player &player2);
 bool compareName(Player &player1, Player &player2);
 bool compareInput(Player &player1, Player &player2);
 bool compareHits(Player &player1, Player &player2);
+bool compareWalks(Player &player1, Player &player2);
+bool compareStrikeouts(Player &player1, Player &player2);
+bool compareHitsByPitch(Player &player1, Player &player2);
 
+void printBA(vector<Player> &leaders);
+void printOBP(vector<Player> &leaders);
+void printHits(vector<Player> &leaders);
+void printWalks(vector<Player> &leaders);
+void printStrikeouts(vector<Player> &leaders);
+void printHits_By_Pitch(vector<Player> &leaders);
 
+void printTies(vector<Player> &temp);
 
 int main()
 {
@@ -34,20 +47,15 @@ int main()
     unordered_map<string, string> legend;
     fillLegend(legend);
 
-    //create a vector for leaders in each category and values for each leader
     vector<Player> leaders;
 
     ifstream file(fileName);
     string line;
 
-    cout << legend["F8"] << endl;
-    cout << legend["1-3"] << endl;
-
     int count = 0;
 
     while(getline(file,line))
     {
-        //create a player object
         Player player;
         
         player.setInput(count);
@@ -75,14 +83,14 @@ int main()
         player.setName(name);
         line.erase(0, name.length() + 1);
 
-        //get the player's stats
+        //get the play code
         string code;
         stringstream(line) >> code;
         line.erase(0, code.length() + 1);
     
         string description = legend[code];
         bool atbat = false;
-        if(description.size() != 0)
+        if((int)description.size() != 0)
         {
             if(description == "Hit")
             {
@@ -128,9 +136,8 @@ int main()
             throw invalid_argument("Invalid code");
         }
         
-        //add the player to the leader vector if they aren't already there
         bool found = false;
-        for(int i = 0; i < leaders.size(); i++)
+        for(int i = 0; i < (int)leaders.size(); i++)
         {
             if(leaders[i].getName() == player.getName())
             {
@@ -150,10 +157,8 @@ int main()
             leaders.push_back(player);
         }
 
-        //if the player is a home player, add the name and the player object to the homePlayers map
         if(player.isHome())
         {
-            //if the player is already in the map, update their stats
             if(homePlayers.find(name) != homePlayers.end())
             {
                 homePlayers[name].setHits(homePlayers[name].getHits() + player.getHits());
@@ -169,10 +174,8 @@ int main()
                 homePlayers.insert(pair<string, Player>(name, player));
             }
         }
-        //if the player is an away player, add the name and the player object to the awayPlayers map
         else
         {
-            //if the player is already in the map, update their stats
             if(awayPlayers.find(name) != awayPlayers.end())
             {
                 awayPlayers[name].setHits(awayPlayers[name].getHits() + player.getHits());
@@ -190,17 +193,14 @@ int main()
         }
     }
 
-    //call a function that prints the away players
     printPlayers(awayPlayers);
     printPlayers(homePlayers);
 
     printLeaders(leaders);
 }
 
-//create a function that fills the hashmap with the play codes and descriptions
 void fillLegend(unordered_map<string, string> &legend)
 {
-    //input from keyfile.txt to fill the hashmap with the play codes and descriptions
     ifstream file("keyfile.txt");
     string line;
 
@@ -240,7 +240,7 @@ void fillLegend(unordered_map<string, string> &legend)
             }
             continue;
         }
-        else if (line.size() == 0)
+        else if ((int)line.size() == 0)
         {
             continue;
         }
@@ -251,8 +251,7 @@ void fillLegend(unordered_map<string, string> &legend)
     }
 }
 
-//create a function that takes the awayPlayers and homePlayers maps and
-//prints the players in the maps
+
 void printPlayers(map<string, Player> &players)
 {
     //if the first player in the map is a home player, print "Home Players"
@@ -281,20 +280,30 @@ void printPlayers(map<string, Player> &players)
     cout << endl;
 }
 
-//create a function that takes the leaders vector and prints the leaders
 void printLeaders(vector<Player> &leaders)
 {
     cout << "LEAGUE LEADERS" << endl;
-    
-    //-----------BATTING AVERAGE------------//
-    sort(leaders.begin(), leaders.end(), compareBattingAverage);
+    printBA(leaders);
+    printOBP(leaders);
+    printHits(leaders);
+    printWalks(leaders);
+    printStrikeouts(leaders);
+    printHits_By_Pitch(leaders);
+}
+
+//---------PRINTING LEADERS-----------//
+
+//-----------BATTING AVERAGE------------//
+void printBA(vector<Player> &leaders)
+{
+    std::sort(leaders.begin(), leaders.end(), compareBattingAverage);
     
     vector<Player> temp;
 
     int leaderCount = 0, i = 0;
     cout << "BATTING AVERAGE" << endl;
     cout << fixed << setprecision(3) << leaders[0].getBatting_Average() << "\t";
-    for(i = 0; i < leaders.size(); i++) // 1st PLACE TIES /////////////
+    for(i = 0; i < (int)leaders.size(); i++) // 1st PLACE TIES /////////////
     {
         if(leaders[i].getBatting_Average() == leaders[0].getBatting_Average())
         {
@@ -303,48 +312,15 @@ void printLeaders(vector<Player> &leaders)
         }
         else break;
     }
-    sort(temp.begin(), temp.end(), compareInput);
-    for(int j = 0; j < temp.size(); j++) // AWAY /////////////
-    {
-        if (temp[j].isHome())
-        {
-            continue;
-        }
-        else
-        {
-            if (j != 0)
-            {
-                cout << ", ";
-            }
+    printTies(temp);
 
-            cout << temp[j].getName();
-        }
-    }
-    for(int j = 0; j < temp.size(); j++) // HOME /////////////
-    {
-        if (temp[j].isHome())
-        {
-            if (j != 0)
-            {
-                cout << ", ";
-            }
-
-            cout << temp[j].getName();
-        }
-        else
-        {
-            continue;
-        }
-    }
-    cout << endl;
-    temp.clear();
-
-    if(leaderCount >= 3 || i >= leaders.size()) {/*continue*/}
+    if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
     else
     {
+        if(leaderCount >= (int)leaders.size()) cout << "OUT OF BOUNDS" << endl;
         cout << fixed << setprecision(3) << leaders[leaderCount].getBatting_Average() << "\t";
         int initialLeaderCount = leaderCount;
-        for(i = leaderCount; i < leaders.size(); i++) // 2nd PLACE TIES ///////////
+        for(i = leaderCount; i < (int)leaders.size(); i++) // 2nd PLACE TIES ///////////
         {
             if(leaders[i].getBatting_Average() == leaders[initialLeaderCount].getBatting_Average())
             {
@@ -353,48 +329,15 @@ void printLeaders(vector<Player> &leaders)
             }
             else break;
         }
-        sort(temp.begin(), temp.end(), compareInput);
-        for (int j = 0; j < temp.size(); j++) // AWAY /////////////
-        {
-            if (temp[j].isHome())
-            {
-                continue;
-            }
-            else
-            {
-                if (j != 0)
-                {
-                    cout << ", ";
-                }
+        printTies(temp);
 
-                cout << temp[j].getName();
-            }
-        }
-        for (int j = 0; j < temp.size(); j++) // HOME /////////////
-        {
-            if (temp[j].isHome())
-            {
-                if (j != 0)
-                {
-                    cout << ", ";
-                }
-
-                cout << temp[j].getName();
-            }
-            else
-            {
-                continue;
-            }
-        }
-        cout << endl;
-        temp.clear();
-
-        if(leaderCount >= 3 || i >= leaders.size()) {/*continue*/}
+        if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
         else
         {
+            if(leaderCount >= (int)leaders.size()) cout << "OUT OF BOUNDS" << endl;
             cout << fixed << setprecision(3) << leaders[leaderCount].getBatting_Average() << "\t";
             int initialLeaderCount = leaderCount;
-            for(i = leaderCount; i < leaders.size(); i++) // 3rd PLACE TIES ////////
+            for(i = leaderCount; i < (int)leaders.size(); i++) // 3rd PLACE TIES ////////
             {
                 if(leaders[i].getBatting_Average() == leaders[initialLeaderCount].getBatting_Average())
                 {
@@ -403,54 +346,27 @@ void printLeaders(vector<Player> &leaders)
                 }
                 else break;
             }
-            sort(temp.begin(), temp.end(), compareInput);
-            for (int j = 0; j < temp.size(); j++) // AWAY /////////////
-            {
-                if (temp[j].isHome())
-                {
-                    continue;
-                }
-                else
-                {
-                    if (j != 0)
-                    {
-                        cout << ", ";
-                    }
-
-                    cout << temp[j].getName();
-                }
-            }
-            for (int j = 0; j < temp.size(); j++) // HOME /////////////
-            {
-                if (temp[j].isHome())
-                {
-                    if (j != 0)
-                    {
-                        cout << ", ";
-                    }
-
-                    cout << temp[j].getName();
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            cout << endl;
-            temp.clear();
+            printTies(temp);
         }
 
     }
     cout << endl;
-    //--------------------------------------//
+}
 
-    //-----------ON BASE PERCENTAGE------------//
-    sort(leaders.begin(), leaders.end(), compareOnBasePercentage);
 
-    leaderCount = 0, i = 0;
-    cout << "ON BASE PERCENTAGE" << endl;
+
+//-----------ON BASE PERCENTAGE------------//
+
+void printOBP(vector<Player> &leaders)
+{
+    std::sort(leaders.begin(), leaders.end(), compareOnBasePercentage);
+
+    vector<Player> temp;
+
+    int leaderCount = 0, i = 0;
+    cout << "ON-BASE PERCENTAGE" << endl;
     cout << fixed << setprecision(3) << leaders[0].getOn_Base_Percentage() << "\t";
-    for(i = 0; i < leaders.size(); i++) // 1st PLACE TIES /////////////
+    for(i = 0; i < (int)leaders.size(); i++) // 1st PLACE TIES /////////////
     {
         if(leaders[i].getOn_Base_Percentage() == leaders[0].getOn_Base_Percentage())
         {
@@ -459,48 +375,14 @@ void printLeaders(vector<Player> &leaders)
         }
         else break;
     }
-    sort(temp.begin(), temp.end(), compareName);
-    for(int j = 0; j < temp.size(); j++) // AWAY /////////////
-    {
-        if (temp[j].isHome())
-        {
-            continue;
-        }
-        else
-        {
-            if (j != 0)
-            {
-                cout << ", ";
-            }
+    printTies(temp);
 
-            cout << temp[j].getName();
-        }
-    }
-    for(int j = 0; j < temp.size(); j++) // HOME /////////////
-    {
-        if (temp[j].isHome())
-        {
-            if (j != 0)
-            {
-                cout << ", ";
-            }
-
-            cout << temp[j].getName();
-        }
-        else
-        {
-            continue;
-        }
-    }
-    cout << endl;
-    temp.clear();
-
-    if(leaderCount >= 3 || i >= leaders.size()) {/*continue*/}
+    if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
     else
     {
         cout << fixed << setprecision(3) << leaders[leaderCount].getOn_Base_Percentage() << "\t";
         int initialLeaderCount = leaderCount;
-        for(i = leaderCount; i < leaders.size(); i++) // 2nd PLACE TIES ///////////
+        for(i = leaderCount; i < (int)leaders.size(); i++) // 2nd PLACE TIES ///////////
         {
             if(leaders[i].getOn_Base_Percentage() == leaders[initialLeaderCount].getOn_Base_Percentage())
             {
@@ -509,48 +391,14 @@ void printLeaders(vector<Player> &leaders)
             }
             else break;
         }
-        sort(temp.begin(), temp.end(), compareName);
-        for (int j = 0; j < temp.size(); j++) // AWAY /////////////
-        {
-            if (temp[j].isHome())
-            {
-                continue;
-            }
-            else
-            {
-                if (j != 0)
-                {
-                    cout << ", ";
-                }
+        printTies(temp);
 
-                cout << temp[j].getName();
-            }
-        }
-        for (int j = 0; j < temp.size(); j++) // HOME /////////////
-        {
-            if (temp[j].isHome())
-            {
-                if (j != 0)
-                {
-                    cout << ", ";
-                }
-
-                cout << temp[j].getName();
-            }
-            else
-            {
-                continue;
-            }
-        }
-        cout << endl;
-        temp.clear();
-
-        if(leaderCount >= 3 || i >= leaders.size()) {/*continue*/}
+        if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
         else
         {
             cout << fixed << setprecision(3) << leaders[leaderCount].getOn_Base_Percentage() << "\t";
             int initialLeaderCount = leaderCount;
-            for(i = leaderCount; i < leaders.size(); i++) // 3rd PLACE TIES ////////
+            for(i = leaderCount; i < (int)leaders.size(); i++) // 3rd PLACE TIES ////////
             {
                 if(leaders[i].getOn_Base_Percentage() == leaders[initialLeaderCount].getOn_Base_Percentage())
                 {
@@ -559,75 +407,345 @@ void printLeaders(vector<Player> &leaders)
                 }
                 else break;
             }
-            sort(temp.begin(), temp.end(), compareName);
-            for (int j = 0; j < temp.size(); j++) // AWAY /////////////
-            {
-                if (temp[j].isHome())
-                {
-                    continue;
-                }
-                else
-                {
-                    if (j != 0)
-                    {
-                        cout << ", ";
-                    }
-
-                    cout << temp[j].getName();
-                }
-            }
-            for (int j = 0; j < temp.size(); j++) // HOME /////////////
-            {
-                if (temp[j].isHome())
-                {
-                    if (j != 0)
-                    {
-                        cout << ", ";
-                    }
-
-                    cout << temp[j].getName();
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            cout << endl;
-            temp.clear();
+            printTies(temp);
         }
 
     }
     cout << endl;
-    //--------------------------------------//
-
 }
 
-//create a function that compares two players by name
+
+
+
+//-----------HITS------------//
+
+void printHits(vector<Player> &leaders)
+{
+    std::sort(leaders.begin(), leaders.end(), compareHits);
+
+    vector<Player> temp;
+
+    int leaderCount = 0, i = 0;
+    cout << "HITS" << endl;
+    cout << fixed << setprecision(3) << leaders[0].getHits() << "\t";
+    for(i = 0; i < (int)leaders.size(); i++) // 1st PLACE TIES /////////////
+    {
+        if(leaders[i].getHits() == leaders[0].getHits())
+        {
+            temp.push_back(leaders[i]);
+            leaderCount++;
+        }
+        else break;
+    }
+    printTies(temp);
+
+    if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
+    else
+    {
+        cout << fixed << setprecision(3) << leaders[leaderCount].getHits() << "\t";
+        int initialLeaderCount = leaderCount;
+        for(i = leaderCount; i < (int)leaders.size(); i++) // 2nd PLACE TIES ///////////
+        {
+            if(leaders[i].getHits() == leaders[initialLeaderCount].getHits())
+            {
+                temp.push_back(leaders[i]);
+                leaderCount++;
+            }
+            else break;
+        }
+        printTies(temp);
+
+        if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
+        else
+        {
+            cout << fixed << setprecision(3) << leaders[leaderCount].getHits() << "\t";
+            int initialLeaderCount = leaderCount;
+            for(i = leaderCount; i < (int)leaders.size(); i++) // 3rd PLACE TIES ////////
+            {
+                if(leaders[i].getHits() == leaders[initialLeaderCount].getHits())
+                {
+                    temp.push_back(leaders[i]);
+                    leaderCount++;
+                }
+                else break;
+            }
+            printTies(temp);
+        }
+
+    }
+    cout << endl;
+}
+
+
+
+
+
+//----------WALKS-----------//
+
+void printWalks(vector<Player> &leaders)
+{
+    std::sort(leaders.begin(), leaders.end(), compareWalks);
+
+    vector<Player> temp;
+
+    int leaderCount = 0, i = 0;
+    cout << "WALKS" << endl;
+    cout << fixed << setprecision(3) << leaders[0].getWalks() << "\t";
+    for(i = 0; i < (int)leaders.size(); i++) // 1st PLACE TIES /////////////
+    {
+        if(leaders[i].getWalks() == leaders[0].getWalks())
+        {
+            temp.push_back(leaders[i]);
+            leaderCount++;
+        }
+        else break;
+    }
+    printTies(temp);
+
+    if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
+    else
+    {
+        cout << fixed << setprecision(3) << leaders[leaderCount].getWalks() << "\t";
+        int initialLeaderCount = leaderCount;
+        for(i = leaderCount; i < (int)leaders.size(); i++) // 2nd PLACE TIES ///////////
+        {
+            if(leaders[i].getWalks() == leaders[initialLeaderCount].getWalks())
+            {
+                temp.push_back(leaders[i]);
+                leaderCount++;
+            }
+            else break;
+        }
+        printTies(temp);
+
+        if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
+        else
+        {
+            cout << fixed << setprecision(3) << leaders[leaderCount].getWalks() << "\t";
+            int initialLeaderCount = leaderCount;
+            for(i = leaderCount; i < (int)leaders.size(); i++) // 3rd PLACE TIES ////////
+            {
+                if(leaders[i].getWalks() == leaders[initialLeaderCount].getWalks())
+                {
+                    temp.push_back(leaders[i]);
+                    leaderCount++;
+                }
+                else break;
+            }
+            printTies(temp);
+        }
+
+    }
+    cout << endl;
+}
+
+
+
+
+
+//----------STRIKEOUTS-----------//
+
+void printStrikeouts(vector<Player> &leaders)
+{
+    std::sort(leaders.begin(), leaders.end(), compareStrikeouts);
+
+    vector<Player> temp;
+
+    int leaderCount = 0, i = 0;
+    cout << "STRIKEOUTS" << endl;
+    cout << fixed << setprecision(3) << leaders[0].getStrikeouts() << "\t";
+    for(i = 0; i < (int)leaders.size(); i++) // 1st PLACE TIES /////////////
+    {
+        if(leaders[i].getStrikeouts() == leaders[0].getStrikeouts())
+        {
+            temp.push_back(leaders[i]);
+            leaderCount++;
+        }
+        else break;
+    }
+    printTies(temp);
+
+    if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
+    else
+    {
+        cout << fixed << setprecision(3) << leaders[leaderCount].getStrikeouts() << "\t";
+        int initialLeaderCount = leaderCount;
+        for(i = leaderCount; i < (int)leaders.size(); i++) // 2nd PLACE TIES ///////////
+        {
+            if(leaders[i].getStrikeouts() == leaders[initialLeaderCount].getStrikeouts())
+            {
+                temp.push_back(leaders[i]);
+                leaderCount++;
+            }
+            else break;
+        }
+        printTies(temp);
+
+        if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
+        else
+        {
+            cout << fixed << setprecision(3) << leaders[leaderCount].getStrikeouts() << "\t";
+            int initialLeaderCount = leaderCount;
+            for(i = leaderCount; i < (int)leaders.size(); i++) // 3rd PLACE TIES ////////
+            {
+                if(leaders[i].getStrikeouts() == leaders[initialLeaderCount].getStrikeouts())
+                {
+                    temp.push_back(leaders[i]);
+                    leaderCount++;
+                }
+                else break;
+            }
+            printTies(temp);
+        }
+
+    }
+    cout << endl;
+}
+
+//----------HITS BY PITCh-----------//
+
+void printHits_By_Pitch(vector<Player> &leaders)
+{
+    std::sort(leaders.begin(), leaders.end(), compareHitsByPitch);
+
+    vector<Player> temp;
+
+    int leaderCount = 0, i = 0;
+    cout << "HIT BY PITCH" << endl;
+    cout << fixed << setprecision(3) << leaders[0].getHits_By_Pitch() << "\t";
+    for(i = 0; i < (int)leaders.size(); i++) // 1st PLACE TIES /////////////
+    {
+        if(leaders[i].getHits_By_Pitch() == leaders[0].getHits_By_Pitch())
+        {
+            temp.push_back(leaders[i]);
+            leaderCount++;
+        }
+        else break;
+    }
+    printTies(temp);
+
+    if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
+    else
+    {
+        cout << fixed << setprecision(3) << leaders[leaderCount].getHits_By_Pitch() << "\t";
+        int initialLeaderCount = leaderCount;
+        for(i = leaderCount; i < (int)leaders.size(); i++) // 2nd PLACE TIES ///////////
+        {
+            if(leaders[i].getHits_By_Pitch() == leaders[initialLeaderCount].getHits_By_Pitch())
+            {
+                temp.push_back(leaders[i]);
+                leaderCount++;
+            }
+            else break;
+        }
+        printTies(temp);
+
+        if(leaderCount >= 3 || i >= (int)leaders.size()) {/*continue*/}
+        else
+        {
+            cout << fixed << setprecision(3) << leaders[leaderCount].getHits_By_Pitch() << "\t";
+            int initialLeaderCount = leaderCount;
+            for(i = leaderCount; i < (int)leaders.size(); i++) // 3rd PLACE TIES ////////
+            {
+                if(leaders[i].getHits_By_Pitch() == leaders[initialLeaderCount].getHits_By_Pitch())
+                {
+                    temp.push_back(leaders[i]);
+                    leaderCount++;
+                }
+                else break;
+            }
+            printTies(temp);
+        }
+
+    }
+    cout << endl;
+}
+
+
+
+//----------Print Ties Helper-----------//
+
+void printTies(vector<Player> &temp)
+{
+    std::sort(temp.begin(), temp.end(), compareName);
+    int printedCount = 0;
+    for (int j = 0; j < (int)temp.size(); j++) // AWAY /////////////
+    {
+        if (temp[j].isHome())
+        {
+            continue;
+        }
+        else
+        {
+            if (printedCount != 0)
+            {
+                cout << ", ";
+            }
+
+            cout << temp[j].getName();
+            printedCount++;
+        }
+    }
+    for (int j = 0; j < (int)temp.size(); j++) // HOME /////////////
+    {
+        if (temp[j].isHome())
+        {
+            if (printedCount != 0)
+            {
+                cout << ", ";
+            }
+
+            cout << temp[j].getName();
+            printedCount++;
+        }
+        else
+        {
+            continue;
+        }
+    }
+    cout << endl;
+    temp.clear();
+}
+
+
+//------------COMPARISON FUNCTIONS-----------------//
+
 bool compareName(Player &player1, Player &player2)
 {
     return player1.getName() < player2.getName();
 }
 
-//create a function that compares two players by batting average
 bool compareBattingAverage(Player &player1, Player &player2)
 {
     return player1.getBatting_Average() > player2.getBatting_Average();
 }
 
-//create a function that compares two players by on base percentage
 bool compareOnBasePercentage(Player &player1, Player &player2)
 {
     return player1.getOn_Base_Percentage() > player2.getOn_Base_Percentage();
 }
 
-//create a function that compares two players by input
 bool compareInput(Player &player1, Player &player2)
 {
     return player1.getInput() < player2.getInput();
 }
 
-//create a function that compares two players by hits
 bool compareHits(Player &player1, Player &player2)
 {
     return player1.getHits() > player2.getHits();
+}
+
+bool compareWalks(Player &player1, Player &player2)
+{
+    return player1.getWalks() > player2.getWalks();
+}
+
+bool compareStrikeouts(Player &player1, Player &player2)
+{
+    return player1.getStrikeouts() < player2.getStrikeouts();
+}
+
+bool compareHitsByPitch(Player &player1, Player &player2)
+{
+    return player1.getHits_By_Pitch() > player2.getHits_By_Pitch();
 }

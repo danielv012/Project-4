@@ -15,6 +15,7 @@ Player::Player()
     hits_by_pitch = 0;
     sacrifices = 0;
     plate_appearances = 0;
+    input = 0;
 }
 
 Player::Player(const Player &player)
@@ -28,6 +29,7 @@ Player::Player(const Player &player)
     hits_by_pitch = player.hits_by_pitch;
     sacrifices = player.sacrifices;
     plate_appearances = player.plate_appearances;
+    input = player.input;
 }
 
 Player::~Player()

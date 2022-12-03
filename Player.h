@@ -3,15 +3,6 @@
 
 #include <string>
 
-//q: how do I correctly format a highlighted block of text by lines in vscode?
-//a: use the "editor.action.smartSelect.grow" command (ctrl+shift+right arrow)
-//   to select the lines you want to format, then use the "editor.action.formatSelection" command (ctrl+k, ctrl+f)
-//   to format the selected lines
-
-
-
-
-
 class Player
 {
 public:
