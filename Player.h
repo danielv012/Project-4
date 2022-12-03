@@ -21,7 +21,7 @@ public:
 
     //getters
     std::string getName() const { return name; }
-    bool getIsHome() const { return home; }
+    bool isHome() const { return home; }
     int getAt_Bats() const { return at_bats; }
     int getHits() const { return hits; }
     int getWalks() const { return walks; }
