@@ -4,10 +4,12 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <sstream>
 
 #include "Player.h"
 
 void fillLegend(std::unordered_map<std::string, std::string>&);
+void printPlayers(std::map<std::string, Player>&);
 
 using namespace std;
 
@@ -26,18 +28,12 @@ int main()
     //create a vector for leaders in each category and values for each leader
     vector<Player> leaders;
 
-
     ifstream file(fileName);
     string line;
 
+    cout << legend["F8"] << endl;
     cout << legend["1-3"] << endl;
-    cout << "Expected: Out" << endl;
-    cout << legend["3u"] << endl;
-    cout << "Expected: Out" << endl;
-    cout << legend["K"] << endl;
-    cout << "Expected: Strikeout" << endl;
-    cout << legend["BB"] << endl;
-    cout << "Expected: Walk" << endl;
+
 
 
     while(getline(file,line))
@@ -46,7 +42,9 @@ int main()
         Player player;
 
         char c;
-        file >> c;
+        stringstream(line) >> c;
+        line.erase(0,2);
+
         switch(c)
         {
             case 'A':
@@ -62,12 +60,14 @@ int main()
 
         //get the player's name
         string name;
-        file >> name;
+        stringstream(line) >> name;
         player.setName(name);
+        line.erase(0, name.length() + 1);
 
         //get the player's stats
         string code;
-        file >> code;
+        stringstream(line) >> code;
+        line.erase(0, code.length() + 1);
     
         string description = legend[code];
         bool atbat = false;
@@ -107,6 +107,7 @@ int main()
             if(atbat)
             {
                 player.setAt_Bats(player.getAt_Bats() + 1);
+                atbat = false;
             }
 
             player.setPlate_Appearances(player.getPlate_Appearances() + 1);
@@ -134,17 +135,46 @@ int main()
         //if the player is a home player, add the name and the player object to the homePlayers map
         if(player.isHome())
         {
-            homePlayers.insert(pair<string, Player>(player.getName(), player));
+            //if the player is already in the map, update their stats
+            if(homePlayers.find(name) != homePlayers.end())
+            {
+                homePlayers[name].setHits(homePlayers[name].getHits() + player.getHits());
+                homePlayers[name].setWalks(homePlayers[name].getWalks() + player.getWalks());
+                homePlayers[name].setStrikeouts(homePlayers[name].getStrikeouts() + player.getStrikeouts());
+                homePlayers[name].setHits_By_Pitch(homePlayers[name].getHits_By_Pitch() + player.getHits_By_Pitch());
+                homePlayers[name].setSacrifices(homePlayers[name].getSacrifices() + player.getSacrifices());
+                homePlayers[name].setAt_Bats(homePlayers[name].getAt_Bats() + player.getAt_Bats());
+                homePlayers[name].setPlate_Appearances(homePlayers[name].getPlate_Appearances() + player.getPlate_Appearances());
+            }
+            else
+            {
+                homePlayers.insert(pair<string, Player>(name, player));
+            }
         }
         //if the player is an away player, add the name and the player object to the awayPlayers map
         else
         {
-            awayPlayers.insert(pair<string, Player>(player.getName(), player));
+            //if the player is already in the map, update their stats
+            if(awayPlayers.find(name) != awayPlayers.end())
+            {
+                awayPlayers[name].setHits(awayPlayers[name].getHits() + player.getHits());
+                awayPlayers[name].setWalks(awayPlayers[name].getWalks() + player.getWalks());
+                awayPlayers[name].setStrikeouts(awayPlayers[name].getStrikeouts() + player.getStrikeouts());
+                awayPlayers[name].setHits_By_Pitch(awayPlayers[name].getHits_By_Pitch() + player.getHits_By_Pitch());
+                awayPlayers[name].setSacrifices(awayPlayers[name].getSacrifices() + player.getSacrifices());
+                awayPlayers[name].setAt_Bats(awayPlayers[name].getAt_Bats() + player.getAt_Bats());
+                awayPlayers[name].setPlate_Appearances(awayPlayers[name].getPlate_Appearances() + player.getPlate_Appearances());
+            }
+            else
+            {
+                awayPlayers.insert(pair<string, Player>(name, player));
+            }
         }
     }
 
     //call a function that prints the away players
     printPlayers(awayPlayers);
+    printPlayers(homePlayers);
 
 
 
@@ -211,25 +241,27 @@ void printPlayers(map<string, Player> &players)
     //if the first player in the map is a home player, print "Home Players"
     if(players.begin()->second.isHome())
     {
-        cout << "Home Players" << endl;
+        cout << "HOME" << endl;
     }
     else
     {
-        cout << "Away Players" << endl;
+        cout << "AWAY" << endl;
     }
 
     for(map<string, Player>::iterator it = players.begin(); it != players.end(); it++)
     {
-        cout << it->first << endl;
-        cout << "At Bats: " << it->second.getAt_Bats() << endl;
-        cout << "Hits: " << it->second.getHits() << endl;
-        cout << "Walks: " << it->second.getWalks() << endl;
-        cout << "Strikeouts: " << it->second.getStrikeouts() << endl;
-        cout << "Hits By Pitch: " << it->second.getHits_By_Pitch() << endl;
-        cout << "Sacrifices: " << it->second.getSacrifices() << endl;
-        cout << "Plate Appearances: " << it->second.getPlate_Appearances() << endl;
+        cout << it->first << "\t";
+        cout << it->second.getAt_Bats() << "\t";
+        cout << it->second.getHits() << "\t";
+        cout << it->second.getWalks() << "\t";
+        cout << it->second.getStrikeouts() << "\t";
+        cout << it->second.getHits_By_Pitch() << "\t";
+        cout << it->second.getSacrifices() << "\t";
+        cout << fixed << setprecision(3) << it->second.getBatting_Average() << "\t";
+        cout << it->second.getOn_Base_Percentage();
         cout << endl;
     }
+    cout << endl;
 }
 
 //create a function that is responsible for printing the leaders in each category

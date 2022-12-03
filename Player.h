@@ -42,7 +42,12 @@ public:
     void setPlate_Appearances(int plate_appearances) { this->plate_appearances = plate_appearances; }
 
     //calculators
-    double getBatting_Average() const { return (double)hits / at_bats; }
+    double getBatting_Average() const 
+    { 
+        if (at_bats == 0) 
+            return 0;
+         return (double)hits / at_bats;
+    }
     double getOn_Base_Percentage() const { return (double)(hits + walks + hits_by_pitch) / plate_appearances; }
 
     //overloaded operators
