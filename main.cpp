@@ -52,7 +52,6 @@ int main()
     ifstream file(fileName);
     string line;
 
-    int count = 0;
 
     while(getline(file,line)) //for each line in the sample file
     {
